@@ -11,6 +11,7 @@ import Logout from './logout';
 
 const Dashboard = () => {
   const [userName, setUserName] = useState('');
+  const [userData, setUserData] = useState(null); // To store user-specific data
   const location = useLocation(); // To determine the active route
 
   useEffect(() => {
@@ -18,6 +19,21 @@ const Dashboard = () => {
     if (user && user.name) {
       setUserName(user.name);
     }
+
+    // Fetch user-specific data
+    const fetchUserData = async () => {
+      if (user && user._id) {
+        try {
+          const res = await fetch(`http://localhost:5000/user/${user._id}`);
+          const data = await res.json();
+          setUserData(data);
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      }
+    };
+
+    fetchUserData();
   }, []);
 
   return (
@@ -80,8 +96,8 @@ const Dashboard = () => {
         <Routes>
           {/* Redirect from /dashboard to /dashboard/payment-history */}
           <Route path="/" element={<Navigate to="/dashboard/payment-history" replace />} />
-          <Route path="/payment-history" element={<Payment />} />
-          <Route path="/attendance" element={<Attendance />} />
+          <Route path="/payment-history" element={<Payment userData={userData} />} />
+          <Route path="/attendance" element={<Attendance userData={userData} />} />
           <Route path="/your-plan" element={<YourPlan />} />
           <Route path="/user-menu" element={<UserMenu />} />
           <Route path="/information" element={<Information />} />

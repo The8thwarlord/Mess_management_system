@@ -23,54 +23,68 @@ const UserSchema = new mongoose.Schema({
   name: String,
   email: { type: String, unique: true },
   password: String,
+  attendance: [
+    {
+      date: String,
+      status: String, // e.g., "Present" or "Absent"
+    },
+  ],
+  payments: [
+    {
+      date: String,
+      amount: Number,
+      remaining: Number,
+      status: String,
+      nextPaymentDate: String,
+    },
+  ],
 });
 const User = mongoose.model("User", UserSchema);
 
-// Payment Schema
-const PaymentSchema = new mongoose.Schema({
-  userId: mongoose.Schema.Types.ObjectId,
-  date: String,
-  amount: Number,
-  remaining: Number,
-  status: String,
-  nextPaymentDate: String,
-});
-const Payment = mongoose.model("Payment", PaymentSchema);
-
-// Endpoint to fetch all users
-app.get("/users", async (req, res) => {
+// Fetch user-specific data
+app.get("/user/:userId", async (req, res) => {
   try {
-    const users = await User.find({}, { name: 1, email: 1 });
-    res.json(users);
-  } catch (error) {
-    console.error("Error fetching users:", error);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
-// Endpoint to fetch payment history for a specific user
-app.get("/payments/:userId", async (req, res) => {
-  try {
-    const payments = await Payment.find({ userId: req.params.userId });
-    res.json(payments);
-  } catch (error) {
-    console.error("Error fetching payments:", error);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
-// Endpoint for user login
-app.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    const user = await User.findOne({ email, password });
-    if (user) {
-      res.json({ user });
-    } else {
-      res.status(401).json({ error: "Invalid credentials" });
+    const user = await User.findById(req.params.userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
     }
+    res.json(user);
   } catch (error) {
-    console.error("Error during login:", error);
+    console.error("Error fetching user data:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Update attendance for a user
+app.post("/user/:userId/attendance", async (req, res) => {
+  const { date, status } = req.body;
+  try {
+    const user = await User.findById(req.params.userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    user.attendance.push({ date, status });
+    await user.save();
+    res.status(200).json({ message: "Attendance updated", attendance: user.attendance });
+  } catch (error) {
+    console.error("Error updating attendance:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Update payment for a user
+app.post("/user/:userId/payments", async (req, res) => {
+  const { date, amount, remaining, status, nextPaymentDate } = req.body;
+  try {
+    const user = await User.findById(req.params.userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    user.payments.push({ date, amount, remaining, status, nextPaymentDate });
+    await user.save();
+    res.status(200).json({ message: "Payment updated", payments: user.payments });
+  } catch (error) {
+    console.error("Error updating payment:", error);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -91,19 +105,6 @@ app.post("/register", async (req, res) => {
     res.status(201).json({ user: newUser });
   } catch (error) {
     console.error("Error during registration:", error);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
-// Endpoint to insert payment data
-app.post("/payments", async (req, res) => {
-  const { userId, date, amount, remaining, status, nextPaymentDate } = req.body;
-  try {
-    const newPayment = new Payment({ userId, date, amount, remaining, status, nextPaymentDate });
-    await newPayment.save();
-    res.status(201).json({ payment: newPayment });
-  } catch (error) {
-    console.error("Error inserting payment:", error);
     res.status(500).json({ error: "Server error" });
   }
 });
