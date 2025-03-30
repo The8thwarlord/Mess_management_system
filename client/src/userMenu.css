@@ -1,0 +1,107 @@
+/* userMenu.css */
+.main-content {
+    flex: 1;
+    padding: 20px;
+    background-color: #fafafa;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .header h1 {
+    font-size: 24px;
+    color: #333;
+    display: flex;
+    align-items: center;
+  }
+  
+  .header h1::before,
+  .header h1::after {
+    content: '🍽️';
+    margin: 0 10px;
+  }
+  
+  .logout-btn {
+    background-color: #000;
+    color: #fff;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .menu-filter {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .menu-filter span {
+    margin-right: 10px;
+    font-size: 16px;
+    color: #666;
+  }
+  
+  .menu-filter select {
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid #e0e0e0;
+  }
+  
+  .special-item {
+    background-color: #00bcd4;
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 16px;
+  }
+  
+  .menu-cards {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+  }
+  
+  .card {
+    flex: 1;
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+  }
+  
+  .card h3 {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 10px;
+  }
+  
+  .card p {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 10px;
+  }
+  
+  .card ul {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 20px;
+  }
+  
+  .card ul li {
+    font-size: 14px;
+    color: #333;
+    margin: 5px 0;
+  }
+  
+  .note {
+    font-size: 12px;
+    color: #ff6f61;
+  }

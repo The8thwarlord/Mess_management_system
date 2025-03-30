@@ -1,0 +1,61 @@
+/* yourPlan.css */
+.main-content {
+    flex: 1;
+    padding: 20px;
+    background-color: #fafafa;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .header h1 {
+    font-size: 24px;
+    color: #333;
+  }
+  
+  .logout-btn {
+    background-color: #000;
+    color: #fff;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .plan-container {
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 20px;
+  }
+  
+  .plan-container h2 {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 15px;
+  }
+  
+  .plan-list {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .plan-item {
+    padding: 10px 0;
+    font-size: 14px;
+    color: #666;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .plan-item:last-child {
+    border-bottom: none;
+  }
+  
+  .plan-day {
+    font-weight: bold;
+    color: #333;
+  }

@@ -1,0 +1,25 @@
+/* logout.css */
+.main-content {
+    flex: 1;
+    padding: 20px;
+    background-color: #fafafa;
+  }
+  
+  .logout-container {
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+  }
+  
+  .logout-container h1 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 15px;
+  }
+  
+  .logout-container p {
+    font-size: 14px;
+    color: #666;
+  }

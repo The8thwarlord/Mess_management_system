@@ -1,0 +1,262 @@
+/* dashboard.css */
+.dashboard-container {
+  display: flex;
+  height: 100vh;
+  font-family: Arial, sans-serif;
+}
+
+/* Sidebar Styles */
+.sidebar {
+  width: 250px;
+  background-color: #f5f7fa;
+  padding: 20px;
+  border-right: 1px solid #e0e0e0;
+}
+
+.sidebar-title {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.sidebar-greeting {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.greeting-icon {
+  background-color: #000;
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 15px;
+  margin-right: 10px;
+  font-size: 14px;
+}
+
+.user-name {
+  font-size: 16px;
+  color: #333;
+}
+
+.sidebar-nav ul,
+.sidebar-account ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar-nav li,
+.sidebar-account li {
+  padding: 10px 0;
+  font-size: 14px;
+  color: #666;
+  display: flex;
+  align-items: center;
+}
+
+.sidebar-nav li.active {
+  background-color: #e0f7fa;
+  border-radius: 5px;
+  padding: 10px;
+  color: #00bcd4;
+}
+
+.sidebar-nav li a {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  align-items: center;
+}
+
+.sidebar-nav li.active a {
+  background-color: #e0f7fa;
+  border-radius: 5px;
+  padding: 10px;
+  color: #00bcd4;
+}
+
+.icon {
+  margin-right: 10px;
+}
+
+.sidebar-account {
+  margin-top: 20px;
+}
+
+.sidebar-account h3 {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+/* Main Content Styles */
+.main-content {
+  flex: 1;
+  padding: 20px;
+  background-color: #fafafa;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.header h1 {
+  font-size: 24px;
+  color: #333;
+  display: flex;
+  align-items: center;
+}
+
+.header h1::before,
+.header h1::after {
+  content: '🍽️';
+  margin: 0 10px;
+}
+
+.logout-btn {
+  background-color: #000;
+  color: #fff;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.menu-filter {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.menu-filter span {
+  margin-right: 10px;
+  font-size: 16px;
+  color: #666;
+}
+
+.menu-filter select {
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid #e0e0e0;
+}
+
+.special-item {
+  background-color: #00bcd4;
+  color: #fff;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 16px;
+}
+
+.menu-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.card {
+  flex: 1;
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  min-width: 250px;
+}
+
+.card h3 {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.card p {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.card ul {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 20px;
+}
+
+.card ul li {
+  font-size: 14px;
+  color: #333;
+  margin: 5px 0;
+}
+
+.note {
+  font-size: 12px;
+  color: #ff6f61;
+}
+
+/* Payment Table Styles (for StudentPaymentHistory and AdminAttendance) */
+.payment-table-container {
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.payment-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.payment-table th,
+.payment-table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.payment-table th {
+  background-color: #f5f7fa;
+  font-size: 14px;
+  color: #333;
+}
+
+.payment-table td {
+  font-size: 14px;
+  color: #666;
+}
+
+.status {
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-size: 12px;
+  color: #fff;
+}
+
+.status.pending,
+.status.absent {
+  background-color: #ff6f61;
+}
+
+.status.completed,
+.status.present {
+  background-color: #4caf50;
+}
+
+/* No Data Message */
+.no-data-message {
+  text-align: center;
+  padding: 20px;
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+}
+
+.no-data-message p {
+  font-size: 16px;
+  color: #666;
+}
