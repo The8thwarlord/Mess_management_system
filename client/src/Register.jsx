@@ -11,17 +11,15 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     setError("");
-
+  
     try {
       const res = await fetch("http://localhost:5000/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(user),
       });
-
+  
       const data = await res.json();
-      console.log("Register Response:", data);
-
       if (res.ok) {
         alert("Registration successful!");
         localStorage.setItem("user", JSON.stringify(data.user)); // Store user data

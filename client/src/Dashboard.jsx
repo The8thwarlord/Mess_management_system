@@ -1,40 +1,81 @@
-import React, { useEffect, useState } from 'react';
-import { Link, Route, Routes, useLocation, Navigate } from 'react-router-dom';
-import './dashboard.css';
-import Payment from './payment';
-import Attendance from './attendance';
-import YourPlan from './yourPlan';
-import UserMenu from './userMenu';
-import Information from './information';
-import Profile from './profile';
-import Logout from './logout';
+import React, { useEffect, useState } from "react";
+import { Link, Route, Routes, useLocation, Navigate } from "react-router-dom";
+import QRCode from "react-qr-code";
+import "./dashboard.css";
+import Payment from "./payment";
+import Attendance from "./attendance";
+import YourPlan from "./yourPlan";
+import UserMenu from "./userMenu";
+import Information from "./information";
+import Profile from "./profile";
+import Logout from "./logout";
 
 const Dashboard = () => {
-  const [userName, setUserName] = useState('');
+  const [userName, setUserName] = useState("");
   const [userData, setUserData] = useState(null); // To store user-specific data
+  const [qrData, setQrData] = useState(null); // To store QR code data
+  const [message, setMessage] = useState(""); // To display success or error messages
   const location = useLocation(); // To determine the active route
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (user && user.name) {
-      setUserName(user.name);
-    }
-
-    // Fetch user-specific data
     const fetchUserData = async () => {
+      const user = JSON.parse(localStorage.getItem("user")); // Get user data from localStorage
       if (user && user._id) {
         try {
-          const res = await fetch(`http://localhost:5000/user/${user._id}`);
+          const res = await fetch(`http://localhost:5000/user/${user._id}`); // Fetch user-specific data
           const data = await res.json();
-          setUserData(data);
+          setUserData(data); // Set the user-specific data
+          setUserName(data.name); // Set the user's name
         } catch (error) {
-          console.error('Error fetching user data:', error);
+          console.error("Error fetching user data:", error);
         }
       }
     };
 
     fetchUserData();
   }, []);
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user && user.name) {
+      const qrPayload = {
+        userId: user._id,
+        name: user.name,
+        email: user.email,
+        meal: "Lunch",
+        date: new Date().toISOString(),
+      };
+      setQrData(JSON.stringify(qrPayload));
+    }
+  }, []);
+
+  const handleMealScan = async () => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user || !user._id) {
+      setMessage("User not logged in.");
+      return;
+    }
+
+    const currentDate = new Date().toISOString().split("T")[0]; // Get the current date in YYYY-MM-DD format
+
+    try {
+      const res = await fetch(`http://localhost:5000/user/${user._id}/mark-attendance`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date: currentDate }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setMessage("Attendance marked successfully!");
+      } else {
+        setMessage(data.error || "Failed to mark attendance.");
+      }
+    } catch (error) {
+      console.error("Error marking attendance:", error);
+      setMessage("Server error. Please try again.");
+    }
+  };
 
   return (
     <div className="dashboard-container">
@@ -47,29 +88,29 @@ const Dashboard = () => {
         </div>
         <nav className="sidebar-nav">
           <ul>
-            <li className={location.pathname === '/dashboard/payment-history' ? 'active' : ''}>
+            <li className={location.pathname === "/dashboard/payment-history" ? "active" : ""}>
               <Link to="/dashboard/payment-history">
                 <span className="icon">📊</span> PAYMENT HISTORY
               </Link>
             </li>
-            <li className={location.pathname === '/dashboard/attendance' ? 'active' : ''}>
+            <li className={location.pathname === "/dashboard/attendance" ? "active" : ""}>
               <Link to="/dashboard/attendance">
                 <span className="icon">⏰</span> ATTENDANCE
               </Link>
             </li>
-            <li className={location.pathname === '/dashboard/your-plan' ? 'active' : ''}>
+            <li className={location.pathname === "/dashboard/your-plan" ? "active" : ""}>
               <Link to="/dashboard/your-plan">
                 <span className="icon">📅</span> YOUR PLAN
               </Link>
             </li>
-            <li className={location.pathname === '/dashboard/user-menu' ? 'active' : ''}>
+            <li className={location.pathname === "/dashboard/user-menu" ? "active" : ""}>
               <Link to="/dashboard/user-menu">
                 <span className="icon">📋</span> USER MENU
               </Link>
             </li>
-            <li className={location.pathname === '/dashboard/information' ? 'active' : ''}>
-              <Link to="/dashboard/information">
-                <span className="icon">ℹ️</span> INFORMATION
+            <li className={location.pathname === "/dashboard/meal-scan" ? "active" : ""}>
+              <Link to="/dashboard/meal-scan">
+                <span className="icon">🍽️</span> MEAL SCAN
               </Link>
             </li>
           </ul>
@@ -94,7 +135,6 @@ const Dashboard = () => {
       {/* Main Content */}
       <div className="main-content">
         <Routes>
-          {/* Redirect from /dashboard to /dashboard/payment-history */}
           <Route path="/" element={<Navigate to="/dashboard/payment-history" replace />} />
           <Route path="/payment-history" element={<Payment userData={userData} />} />
           <Route path="/attendance" element={<Attendance userData={userData} />} />
@@ -103,6 +143,24 @@ const Dashboard = () => {
           <Route path="/information" element={<Information />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/logout" element={<Logout />} />
+          <Route
+            path="/meal-scan"
+            element={
+              <div className="meal-scan-section">
+                <h1>Meal Scan</h1>
+                <p>Scan this QR code at the mess to validate your meal:</p>
+                {qrData && (
+                  <div className="qr-code-container">
+                    <QRCode value={qrData} size={256} />
+                  </div>
+                )}
+                <button onClick={handleMealScan} className="scan-btn">
+                  Mark Attendance
+                </button>
+                {message && <p className="message">{message}</p>}
+              </div>
+            }
+          />
         </Routes>
       </div>
     </div>

@@ -41,6 +41,16 @@ const UserSchema = new mongoose.Schema({
 });
 const User = mongoose.model("User", UserSchema);
 
+app.get("/users", async (req, res) => {
+  try {
+    const users = await User.find(); // Fetch all users from the database
+    res.status(200).json(users);
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 // Fetch user-specific data
 app.get("/user/:userId", async (req, res) => {
   try {
@@ -72,6 +82,8 @@ app.post("/user/:userId/attendance", async (req, res) => {
   }
 });
 
+
+
 // Update payment for a user
 app.post("/user/:userId/payments", async (req, res) => {
   const { date, amount, remaining, status, nextPaymentDate } = req.body;
@@ -89,22 +101,66 @@ app.post("/user/:userId/payments", async (req, res) => {
   }
 });
 
+
+// Fetch payment history for all students
+app.get("/payments", async (req, res) => {
+  try {
+    const users = await User.find({}, "name email payments"); // Fetch name, email, and payments fields
+    const paymentHistory = [];
+
+    users.forEach((user) => {
+      user.payments.forEach((payment) => {
+        paymentHistory.push({
+          studentName: user.name,
+          email: user.email,
+          date: payment.date,
+          amount: payment.amount,
+          status: payment.status,
+        });
+      });
+    });
+
+    res.status(200).json(paymentHistory);
+  } catch (error) {
+    console.error("Error fetching payment history:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 // Endpoint for user registration
 app.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
   try {
-    // Check if the user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ error: "User already exists" });
     }
 
-    // Create a new user
     const newUser = new User({ name, email, password });
     await newUser.save();
-    res.status(201).json({ user: newUser });
+
+    res.status(201).json({ user: { _id: newUser._id, name: newUser.name, email: newUser.email } });
   } catch (error) {
     console.error("Error during registration:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ error: "User not found" });
+    }
+
+    if (user.password !== password) {
+      return res.status(400).json({ error: "Invalid password" });
+    }
+
+    res.status(200).json({ user: { _id: user._id, name: user.name, email: user.email } });
+  } catch (error) {
+    console.error("Error during login:", error);
     res.status(500).json({ error: "Server error" });
   }
 });
