@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mess Attendance Scanner</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #121212;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #00ffcc;
+    }
+
+    #reader {
+      width: 300px;
+      margin-top: 20px;
+    }
+
+    #status {
+      margin-top: 20px;
+      font-size: 1.2em;
+      color: #00ff88;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mess Attendance</h1>
+  <div id="reader"></div>
+  <div id="status"></div>
+
+  <script>
+    (function () {
+      const statusEl = document.getElementById("status");
+
+      // Check if the browser supports the Camera API
+      if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+        console.error("Camera API not supported by this browser.");
+        statusEl.innerText = "❌ Camera API not supported by this browser. Please use a modern browser like Chrome or Firefox.";
+        return;
+      }
+
+      // Function to mark attendance
+      function markAttendance(studentId) {
+        fetch("http://localhost:5000/mark-attendance", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            userId: studentId
+          })
+        })
+        .then(response => {
+          if (!response.ok) {
+            return response.json().then((error) => {
+              throw new Error(error.error || "Failed to mark attendance");
+            });
+          }
+          return response.json();
+        })
+        .then(data => {
+          statusEl.innerText = `✅ Attendance marked for ${studentId}`;
+          setTimeout(() => { statusEl.innerText = ""; }, 3000);
+        })
+        .catch(error => {
+          statusEl.innerText = "❌ Error marking attendance";
+          console.error(error);
+        });
+      }
+
+      // Initialize the QR code scanner
+      const html5QrCode = new Html5Qrcode("reader");
+
+      navigator.mediaDevices.enumerateDevices().then((devices) => {
+        const videoDevices = devices.filter((device) => device.kind === "videoinput");
+        if (videoDevices.length === 0) {
+          console.error("No camera devices found.");
+          statusEl.innerText = "❌ No camera devices found.";
+          return;
+        }
+
+        console.log("Available video devices:", videoDevices);
+
+        html5QrCode.start(
+          { facingMode: "environment" }, // Use the back camera
+          {
+            fps: 10, // Frames per second
+            qrbox: 250 // Size of the scanning box
+          },
+          (decodedText) => {
+            console.log("QR Code scanned:", decodedText);
+            html5QrCode.stop().then(() => {
+              markAttendance(decodedText);
+              setTimeout(() => {
+                html5QrCode.start(
+                  { facingMode: "environment" },
+                  { fps: 10, qrbox: 250 },
+                  (rescanText) => {
+                    console.log("QR Code rescanned:", rescanText);
+                    html5QrCode.stop();
+                    markAttendance(rescanText);
+                  }
+                );
+              }, 3000);
+            });
+          },
+          (errorMessage) => {
+            console.warn("QR Code scanning error:", errorMessage);
+          }
+        ).catch((err) => {
+          if (err.name === "NotAllowedError") {
+            console.error("Camera access denied by the user.");
+            statusEl.innerText = "❌ Camera access denied. Please allow camera permissions.";
+          } else {
+            console.error("Error initializing QR code scanner:", err);
+            statusEl.innerText = "❌ Unable to start QR code scanner.";
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

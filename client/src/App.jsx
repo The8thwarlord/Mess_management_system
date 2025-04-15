@@ -6,6 +6,10 @@ import Dashboard from "./Dashboard";
 import AdminLogin from "./AdminLogin";
 import AdminDashboard from "./adminDashboard";
 
+import AdminScanner from "./AdminScanner";
+import AttendanceViewer from "./AttendanceViewer";
+
+
 const App = () => {
   return (
     <Router>
@@ -14,6 +18,8 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard/*" element={<Dashboard />} />
+        <Route path="/admin/scanner" element={<AdminScanner />} />
+        <Route path="/manager/attendance" element={<AttendanceViewer />} />
         <Route path="/admin-login" element={<AdminLogin />} />
         <Route path="/admin-dashboard/*" element={<AdminDashboard />} />
       </Routes>

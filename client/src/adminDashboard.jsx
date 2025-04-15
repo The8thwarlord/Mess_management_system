@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link, Route, Routes, useLocation, Navigate } from "react-router-dom";
 import "./dashboard.css"; // Reuse the shared dashboard styles
@@ -6,6 +5,8 @@ import Profile from "./profile"; // Reuse the Profile component
 import Logout from "./logout"; // Reuse the Logout component
 import StudentPaymentHistory from "./StudentPaymentHistory"; // Payment History Component
 import StudentInformation from "./StudentInformation"; // Student Information Component
+import AdminScanner from "./AdminScanner"; // QR Scanner Component
+import AttendanceViewer from "./AttendanceViewer"; // Attendance Viewer Component
 
 const AdminDashboard = () => {
   const location = useLocation();
@@ -37,6 +38,28 @@ const AdminDashboard = () => {
             >
               <Link to="/admin-dashboard/payment-history">
                 <span className="icon">💳</span> Payment History
+              </Link>
+            </li>
+            <li
+              className={
+                location.pathname === "/admin-dashboard/scanner"
+                  ? "active"
+                  : ""
+              }
+            >
+              <Link to="/admin-dashboard/scanner">
+                <span className="icon">📷</span> QR Scanner
+              </Link>
+            </li>
+            <li
+              className={
+                location.pathname === "/admin-dashboard/attendance"
+                  ? "active"
+                  : ""
+              }
+            >
+              <Link to="/admin-dashboard/attendance">
+                <span className="icon">⏰</span> Attendance Viewer
               </Link>
             </li>
           </ul>
@@ -75,6 +98,8 @@ const AdminDashboard = () => {
             path="/payment-history"
             element={<StudentPaymentHistory />}
           />
+          <Route path="/scanner" element={<AdminScanner />} />
+          <Route path="/attendance" element={<AttendanceViewer />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/logout" element={<Logout />} />
         </Routes>

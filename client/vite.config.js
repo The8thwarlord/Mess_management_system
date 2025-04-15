@@ -8,4 +8,10 @@ export default defineConfig({
     tailwindcss(),
     react()
   ],
+
+  server: {
+    host: true, // Allow external access
+    port: 5173, // Ensure the port matches your setup
+    allowedHosts: ['.loca.lt'], // Allow all loca.lt subdomains
+  },
 })

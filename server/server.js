@@ -5,9 +5,21 @@ const cors = require("cors");
 const app = express();
 const PORT = 5000;
 
+// CORS Configuration
+app.use(cors({
+  origin: ["http://localhost:5173", "https://*.loca.lt"], // Allow localhost and loca.lt subdomains
+  methods: ["GET", "POST", "PUT", "DELETE"], // Allow specific HTTP methods
+  credentials: true, // Allow cookies and credentials
+}));
+
+app.options("*", cors({
+  origin: ["http://localhost:5173", "https://*.loca.lt"],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
+}));
+
 // Middleware
 app.use(express.json());
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 
 // Connect to MongoDB
 mongoose
@@ -41,6 +53,7 @@ const UserSchema = new mongoose.Schema({
 });
 const User = mongoose.model("User", UserSchema);
 
+// Routes
 app.get("/users", async (req, res) => {
   try {
     const users = await User.find(); // Fetch all users from the database
@@ -51,7 +64,6 @@ app.get("/users", async (req, res) => {
   }
 });
 
-// Fetch user-specific data
 app.get("/user/:userId", async (req, res) => {
   try {
     const user = await User.findById(req.params.userId);
@@ -65,69 +77,35 @@ app.get("/user/:userId", async (req, res) => {
   }
 });
 
-// Update attendance for a user
-app.post("/user/:userId/attendance", async (req, res) => {
-  const { date, status } = req.body;
+app.post("/mark-attendance", async (req, res) => {
+  const { userId } = req.body;
+  const date = new Date().toISOString().split("T")[0];
+
   try {
-    const user = await User.findById(req.params.userId);
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
-    user.attendance.push({ date, status });
-    await user.save();
-    res.status(200).json({ message: "Attendance updated", attendance: user.attendance });
-  } catch (error) {
-    console.error("Error updating attendance:", error);
-    res.status(500).json({ error: "Server error" });
-  }
-});
 
-
-
-// Update payment for a user
-app.post("/user/:userId/payments", async (req, res) => {
-  const { date, amount, remaining, status, nextPaymentDate } = req.body;
-  try {
-    const user = await User.findById(req.params.userId);
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
+    // Check if attendance for the current date already exists
+    const existingAttendance = user.attendance.find((record) => record.date === date);
+    if (existingAttendance) {
+      // Overwrite the existing attendance record
+      existingAttendance.status = "Present";
+    } else {
+      // Add a new attendance record
+      user.attendance.push({ date, status: "Present" });
     }
-    user.payments.push({ date, amount, remaining, status, nextPaymentDate });
+
     await user.save();
-    res.status(200).json({ message: "Payment updated", payments: user.payments });
+
+    res.status(200).json({ message: "Attendance marked successfully", attendance: user.attendance });
   } catch (error) {
-    console.error("Error updating payment:", error);
+    console.error("Error marking attendance:", error);
     res.status(500).json({ error: "Server error" });
   }
 });
 
-
-// Fetch payment history for all students
-app.get("/payments", async (req, res) => {
-  try {
-    const users = await User.find({}, "name email payments"); // Fetch name, email, and payments fields
-    const paymentHistory = [];
-
-    users.forEach((user) => {
-      user.payments.forEach((payment) => {
-        paymentHistory.push({
-          studentName: user.name,
-          email: user.email,
-          date: payment.date,
-          amount: payment.amount,
-          status: payment.status,
-        });
-      });
-    });
-
-    res.status(200).json(paymentHistory);
-  } catch (error) {
-    console.error("Error fetching payment history:", error);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
-// Endpoint for user registration
 app.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
   try {
@@ -165,6 +143,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
+// Start the HTTP server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
