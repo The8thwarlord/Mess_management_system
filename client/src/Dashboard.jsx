@@ -4,7 +4,7 @@ import QRCode from "react-qr-code";
 import "./dashboard.css";
 import StudentPaymentHistory from "./StudentPaymentHistory";
 import Attendance from "./attendance";
-import YourPlan from "./yourPlan";
+
 import UserMenu from "./userMenu";
 import Information from "./information";
 import Profile from "./profile";
@@ -98,11 +98,7 @@ const Dashboard = () => {
                 <span className="icon">⏰</span> ATTENDANCE
               </Link>
             </li>
-            <li className={location.pathname === "/dashboard/your-plan" ? "active" : ""}>
-              <Link to="/dashboard/your-plan">
-                <span className="icon">📅</span> YOUR PLAN
-              </Link>
-            </li>
+            
             <li className={location.pathname === "/dashboard/user-menu" ? "active" : ""}>
               <Link to="/dashboard/user-menu">
                 <span className="icon">📋</span> USER MENU
@@ -138,7 +134,7 @@ const Dashboard = () => {
           <Route path="/" element={<Navigate to="/dashboard/payment-history" replace />} />
           <Route path="/payment-history" element={<StudentPaymentHistory userId={userData?._id} />} />
           <Route path="/attendance" element={<Attendance userData={userData} />} />
-          <Route path="/your-plan" element={<YourPlan />} />
+       
           <Route path="/user-menu" element={<UserMenu />} />
           <Route path="/information" element={<Information />} />
           <Route path="/profile" element={<Profile />} />
@@ -154,9 +150,7 @@ const Dashboard = () => {
                     <QRCode value={qrData} size={256} />
                   </div>
                 )}
-                <button onClick={handleMealScan} className="scan-btn">
-                  Mark Attendance
-                </button>
+                
                 {message && <p className="message">{message}</p>}
               </div>
             }
