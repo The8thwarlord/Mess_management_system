@@ -7,13 +7,21 @@ const PORT = 5000;
 
 // CORS Configuration
 app.use(cors({
-  origin: ["http://localhost:5173", "https://*.loca.lt"], // Allow localhost and loca.lt subdomains
-  methods: ["GET", "POST", "PUT", "DELETE"], // Allow specific HTTP methods
-  credentials: true, // Allow cookies and credentials
+  origin: [
+    "http://localhost:5173", // Local development
+    "https://your-backend-subdomain.loca.lt", // Backend localtunnel URL
+    "https://frontend.loca.lt" // Frontend localtunnel URL
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
 }));
 
 app.options("*", cors({
-  origin: ["http://localhost:5173", "https://*.loca.lt"],
+  origin: [
+    "http://localhost:5173",
+    "https://your-backend-subdomain.loca.lt",
+    "https://frontend.loca.lt"
+  ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
 }));
@@ -35,6 +43,7 @@ const UserSchema = new mongoose.Schema({
   name: String,
   email: { type: String, unique: true },
   password: String,
+  registrationDate: { type: String, default: () => new Date().toISOString().split("T")[0] },
   attendance: [
     {
       date: String,
@@ -79,22 +88,50 @@ app.get("/user/:userId", async (req, res) => {
 
 app.post("/mark-attendance", async (req, res) => {
   const { userId } = req.body;
-  const date = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split("T")[0];
 
   try {
     const user = await User.findById(userId);
     if (!user) {
+      console.error("User not found:", userId);
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Check if attendance for the current date already exists
-    const existingAttendance = user.attendance.find((record) => record.date === date);
-    if (existingAttendance) {
-      // Overwrite the existing attendance record
-      existingAttendance.status = "Present";
+    // Get all attendance dates
+    const markedDates = user.attendance.map(a => a.date);
+
+    // Use registrationDate as the earliest possible date
+    // Use registrationDate as the earliest possible date
+    const registrationDate = user.registrationDate || today;
+
+    // Find the last date attendance was marked, or registrationDate if none
+    let lastMarkedDate = user.attendance.length
+      ? user.attendance.map(a => a.date).sort().slice(-1)[0]
+      : registrationDate;
+
+    // Only fill absents for days after registrationDate
+    let current = new Date(lastMarkedDate);
+    const end = new Date(today);
+    current.setDate(current.getDate() + 1); // Start from next day
+
+    while (current <= end) {
+      const dateStr = current.toISOString().split("T")[0];
+      // Only add absents if dateStr >= registrationDate
+      if (
+        !markedDates.includes(dateStr) &&
+        new Date(dateStr) >= new Date(registrationDate)
+      ) {
+        user.attendance.push({ date: dateStr, status: "Absent" });
+      }
+      current.setDate(current.getDate() + 1);
+    }
+
+    // Mark today as Present
+    const todayRecord = user.attendance.find(a => a.date === today);
+    if (todayRecord) {
+      todayRecord.status = "Present";
     } else {
-      // Add a new attendance record
-      user.attendance.push({ date, status: "Present" });
+      user.attendance.push({ date: today, status: "Present" });
     }
 
     await user.save();
@@ -114,7 +151,8 @@ app.post("/register", async (req, res) => {
       return res.status(400).json({ error: "User already exists" });
     }
 
-    const newUser = new User({ name, email, password });
+    const registrationDate = new Date().toISOString().split("T")[0];
+    const newUser = new User({ name, email, password, registrationDate });
     await newUser.save();
 
     res.status(201).json({ user: { _id: newUser._id, name: newUser.name, email: newUser.email } });
@@ -139,6 +177,51 @@ app.post("/login", async (req, res) => {
     res.status(200).json({ user: { _id: user._id, name: user.name, email: user.email } });
   } catch (error) {
     console.error("Error during login:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.get("/attendance/:userId", async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      console.error("User not found:", userId);
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Sort attendance by date
+    const sortedAttendance = [...user.attendance].sort(
+      (a, b) => new Date(a.date) - new Date(b.date)
+    );
+
+    // Count present days
+    const presentRecords = sortedAttendance.filter(a => a.status === "Present");
+    const presentCount = presentRecords.length;
+
+    let nextPaymentDate = null;
+
+    if (presentCount > 0 && presentCount < 30) {
+      // Use the date of the first present (or registrationDate if no presents)
+      const baseDate = presentRecords[0]?.date || user.registrationDate;
+      const needed = 30 - presentCount;
+      const expectedDate = new Date(baseDate);
+      expectedDate.setDate(expectedDate.getDate() + needed);
+      nextPaymentDate = expectedDate.toISOString().split("T")[0];
+    } else if (presentCount >= 30) {
+      // Find the date of the 30th present
+      nextPaymentDate = presentRecords[29].date;
+    }
+
+    res.status(200).json({
+      attendance: sortedAttendance,
+      presentCount,
+      nextPaymentDate,
+      registrationDate: user.registrationDate
+    });
+  } catch (error) {
+    console.error("Error fetching attendance:", error);
     res.status(500).json({ error: "Server error" });
   }
 });

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, Route, Routes, useLocation, Navigate } from "react-router-dom";
 import QRCode from "react-qr-code";
 import "./dashboard.css";
-import Payment from "./payment";
+import StudentPaymentHistory from "./StudentPaymentHistory";
 import Attendance from "./attendance";
 import YourPlan from "./yourPlan";
 import UserMenu from "./userMenu";
@@ -136,7 +136,7 @@ const Dashboard = () => {
       <div className="main-content">
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard/payment-history" replace />} />
-          <Route path="/payment-history" element={<Payment userData={userData} />} />
+          <Route path="/payment-history" element={<StudentPaymentHistory userId={userData?._id} />} />
           <Route path="/attendance" element={<Attendance userData={userData} />} />
           <Route path="/your-plan" element={<YourPlan />} />
           <Route path="/user-menu" element={<UserMenu />} />
