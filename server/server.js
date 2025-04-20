@@ -44,6 +44,11 @@ const UserSchema = new mongoose.Schema({
   email: { type: String, unique: true },
   password: String,
   registrationDate: { type: String, default: () => new Date().toISOString().split("T")[0] },
+  rollNo: String,
+  mobileNo: String,
+  roomNo: String,
+  yearOfStudy: String,
+  branch: String,
   attendance: [
     {
       date: String,
@@ -82,6 +87,30 @@ app.get("/user/:userId", async (req, res) => {
     res.json(user);
   } catch (error) {
     console.error("Error fetching user data:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.put("/user/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const updateData = req.body;
+    // Prevent email and _id changes for security
+    delete updateData._id;
+    delete updateData.email;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: updateData },
+      { new: true }
+    );
+    if (!updatedUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    // THIS IS IMPORTANT:
+    return res.json({ user: updatedUser });
+  } catch (error) {
+    console.error("Error updating user profile:", error);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -155,7 +184,9 @@ app.post("/register", async (req, res) => {
     const newUser = new User({ name, email, password, registrationDate });
     await newUser.save();
 
-    res.status(201).json({ user: { _id: newUser._id, name: newUser.name, email: newUser.email } });
+    // Fetch the full user object (excluding password)
+    const userToSend = await User.findById(newUser._id).select("-password");
+    res.status(201).json({ user: userToSend });
   } catch (error) {
     console.error("Error during registration:", error);
     res.status(500).json({ error: "Server error" });
@@ -174,7 +205,9 @@ app.post("/login", async (req, res) => {
       return res.status(400).json({ error: "Invalid password" });
     }
 
-    res.status(200).json({ user: { _id: user._id, name: user.name, email: user.email } });
+    // Fetch the full user object (excluding password)
+    const userToSend = await User.findById(user._id).select("-password");
+    res.status(200).json({ user: userToSend });
   } catch (error) {
     console.error("Error during login:", error);
     res.status(500).json({ error: "Server error" });

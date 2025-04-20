@@ -1,6 +1,7 @@
-// profile.jsx
 import React, { useEffect, useState } from 'react';
 import './profile.css';
+
+const API_URL = "http://localhost:5000";
 
 const Profile = () => {
   const [user, setUser] = useState({
@@ -19,13 +20,14 @@ const Profile = () => {
     const storedUser = JSON.parse(localStorage.getItem('user'));
     if (storedUser) {
       setUser({
-        name: storedUser.name || 'Jani Jasmin 2008',
-        email: storedUser.email || 'jani.jasmin@example.com',
-        rollNo: storedUser.rollNo || '2008',
+        name: storedUser.name || '',
+        email: storedUser.email || '',
+        rollNo: storedUser.rollNo || '',
         mobileNo: storedUser.mobileNo || '',
         roomNo: storedUser.roomNo || '',
         yearOfStudy: storedUser.yearOfStudy || '',
         branch: storedUser.branch || '',
+        _id: storedUser._id,
       });
     }
   }, []);
@@ -44,11 +46,32 @@ const Profile = () => {
     setIsEditing(!isEditing);
   };
 
-  // Save changes to localStorage
-  const handleSave = () => {
-    localStorage.setItem('user', JSON.stringify(user));
-    setIsEditing(false);
-    alert('Profile updated successfully!');
+  // Save changes to backend and localStorage
+  const handleSave = async () => {
+    try {
+      const storedUser = JSON.parse(localStorage.getItem('user'));
+      if (!storedUser || !storedUser._id) {
+        alert("User not found in localStorage.");
+        return;
+      }
+      const response = await fetch(`${API_URL}/user/${storedUser._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(user),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+        setUser(data.user);
+        setIsEditing(false);
+        alert('Profile updated successfully!');
+      } else {
+        alert(data.error || "Failed to update profile.");
+      }
+    } catch (error) {
+      alert("Server error. Please try again.");
+      console.error("Error updating profile:", error);
+    }
   };
 
   return (
