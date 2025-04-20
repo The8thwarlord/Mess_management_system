@@ -1,54 +1,84 @@
 import React, { useEffect, useState } from "react";
-import "./dashboard.css";
+import "./StudentPaymentHistory.css"; // Reuse table styles
+
+const API_URL = "http://localhost:5000";
 
 const AttendanceViewer = () => {
-  const [attendanceData, setAttendanceData] = useState([]);
+  const [students, setStudents] = useState([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchAttendance = async () => {
       try {
-        const res = await fetch("http://localhost:5000/attendance");
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
+        const res = await fetch(`${API_URL}/users`);
+        if (!res.ok) throw new Error("Failed to fetch attendance");
         const data = await res.json();
-        setAttendanceData(data);
-      } catch (error) {
-        console.error("Error fetching attendance data:", error);
-        setError("Failed to fetch attendance data. Please try again later.");
+        setStudents(data);
+      } catch (err) {
+        setError("Failed to fetch attendance data.");
       }
     };
-
     fetchAttendance();
   }, []);
 
   return (
-    <div className="attendance-viewer">
-      <h1>Attendance Records</h1>
-      {error && <p className="error">{error}</p>}
-      <table className="attendance-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Student Name</th>
-            <th>Email</th>
-            <th>Date</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {attendanceData.map((record, index) => (
-            <tr key={index}>
-              <td>{index + 1}</td>
-              <td>{record.studentName}</td>
-              <td>{record.email}</td>
-              <td>{record.date}</td>
-              <td>{record.status}</td>
+    <div className="main-content">
+      <div className="header">
+        <h1>Student Attendance Records</h1>
+      </div>
+      <div className="payment-table-container">
+        <table className="payment-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Roll No</th>
+              <th>Email</th>
+              <th>Total Days</th>
+              <th>Days Present</th>
+              <th>Days Absent</th>
+              <th>Attendance %</th>
+              <th>Last Present</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {students.map((student, idx) => {
+              const attendanceArr = Array.isArray(student.attendance) ? student.attendance : [];
+              const totalDays = attendanceArr.length;
+              const presentDays = attendanceArr.filter(a => a.status === "Present").length;
+              const absentDays = totalDays - presentDays;
+              const percent = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
+              const lastPresent = attendanceArr
+                .slice()
+                .reverse()
+                .find(a => a.status === "Present")?.date || "-";
+              return (
+                <tr key={student._id || idx}>
+                  <td>{idx + 1}</td>
+                  <td>{student.name}</td>
+                  <td>{student.rollNo || "-"}</td>
+                  <td>{student.email}</td>
+                  <td>{totalDays}</td>
+                  <td style={{ color: "#388e3c", fontWeight: 600 }}>{presentDays}</td>
+                  <td style={{ color: "#e53935", fontWeight: 600 }}>{absentDays}</td>
+                  <td style={{ fontWeight: 600 }}>{percent}%</td>
+                  <td>{lastPresent}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        {students.length === 0 && (
+          <div className="no-data-message">
+            <p>No attendance records found.</p>
+          </div>
+        )}
+        {error && (
+          <div className="no-data-message" style={{ color: "#e53935" }}>
+            <p>{error}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

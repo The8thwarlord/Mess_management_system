@@ -1,12 +1,108 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, Route, Routes, useLocation, Navigate } from "react-router-dom";
-import "./dashboard.css"; // Reuse the shared dashboard styles
-import Profile from "./profile"; // Reuse the Profile component
-import Logout from "./logout"; // Reuse the Logout component
-import StudentPaymentHistory from "./StudentPaymentHistory"; // Payment History Component
-import StudentInformation from "./StudentInformation"; // Student Information Component
-import AdminScanner from "./AdminScanner"; // QR Scanner Component
-import AttendanceViewer from "./AttendanceViewer"; // Attendance Viewer Component
+import "./dashboard.css";
+import Profile from "./profile";
+import Logout from "./logout";
+import StudentPaymentHistory from "./PaymentViewer";
+import StudentInformation from "./StudentInformation";
+import AttendanceViewer from "./AttendanceViewer";
+
+// --- New: MarkPayment Component ---
+const API_URL = "http://localhost:5000";
+const MarkPayment = () => {
+  const [students, setStudents] = useState([]);
+  const [selectedId, setSelectedId] = useState("");
+  const [amount, setAmount] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  React.useEffect(() => {
+    fetch(`${API_URL}/users`)
+      .then(res => res.json())
+      .then(data => setStudents(data))
+      .catch(() => setStudents([]));
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMessage("");
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/user/${selectedId}/mark-payment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: Number(amount),
+          date: new Date().toISOString().split("T")[0],
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMessage("✅ Payment marked successfully!");
+      } else {
+        setMessage(data.error || "Failed to mark payment.");
+      }
+    } catch (err) {
+      setMessage("Server error. Please try again.");
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="main-content">
+      <div className="header">
+        <h1>Mark Student Payment</h1>
+      </div>
+      <form className="payment-table-container" onSubmit={handleSubmit} style={{ maxWidth: 500 }}>
+        <div style={{ marginBottom: 18 }}>
+          <label>
+            Student:
+            <select
+              value={selectedId}
+              onChange={e => setSelectedId(e.target.value)}
+              required
+              style={{ marginLeft: 10, padding: 6, minWidth: 200 }}
+            >
+              <option value="">Select student</option>
+              {students.map(s => (
+                <option key={s._id} value={s._id}>
+                  {s.name} ({s.rollNo || s.email})
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <div style={{ marginBottom: 18 }}>
+          <label>
+            Amount (₹):
+            <input
+              type="number"
+              min="1"
+              value={amount}
+              onChange={e => setAmount(e.target.value)}
+              required
+              style={{ marginLeft: 10, padding: 6, width: 120 }}
+            />
+          </label>
+        </div>
+        <button
+          type="submit"
+          className="auth-btn"
+          disabled={loading || !selectedId || !amount}
+          style={{ marginTop: 10 }}
+        >
+          {loading ? "Marking..." : "Mark Payment"}
+        </button>
+        {message && (
+          <div style={{ marginTop: 18, color: message.startsWith("✅") ? "#388e3c" : "#e53935" }}>
+            {message}
+          </div>
+        )}
+      </form>
+    </div>
+  );
+};
+// --- End MarkPayment Component ---
 
 const AdminDashboard = () => {
   const location = useLocation();
@@ -40,17 +136,19 @@ const AdminDashboard = () => {
                 <span className="icon">💳</span> Payment History
               </Link>
             </li>
+            {/* --- New: Mark Payment Tab --- */}
             <li
               className={
-                location.pathname === "/admin-dashboard/scanner"
+                location.pathname === "/admin-dashboard/mark-payment"
                   ? "active"
                   : ""
               }
             >
-              <Link to="/admin-dashboard/scanner">
-                <span className="icon">📷</span> QR Scanner
+              <Link to="/admin-dashboard/mark-payment">
+                <span className="icon">💵</span> Mark Payment
               </Link>
             </li>
+            {/* --- End New Tab --- */}
             <li
               className={
                 location.pathname === "/admin-dashboard/attendance"
@@ -67,11 +165,6 @@ const AdminDashboard = () => {
         <div className="sidebar-account">
           <h3>ACCOUNT</h3>
           <ul>
-            <li>
-              <Link to="/admin-dashboard/profile">
-                <span className="icon">👤</span> Profile
-              </Link>
-            </li>
             <li>
               <Link to="/admin-dashboard/logout">
                 <span className="icon">🚪</span> Logout
@@ -98,9 +191,13 @@ const AdminDashboard = () => {
             path="/payment-history"
             element={<StudentPaymentHistory />}
           />
-          <Route path="/scanner" element={<AdminScanner />} />
+          {/* --- New: Mark Payment Route --- */}
+          <Route
+            path="/mark-payment"
+            element={<MarkPayment />}
+          />
+          {/* --- End New Route --- */}
           <Route path="/attendance" element={<AttendanceViewer />} />
-          <Route path="/profile" element={<Profile />} />
           <Route path="/logout" element={<Logout />} />
         </Routes>
       </div>

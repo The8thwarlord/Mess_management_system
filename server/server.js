@@ -115,6 +115,7 @@ app.put("/user/:userId", async (req, res) => {
   }
 });
 
+// server.js (excerpt)
 app.post("/mark-attendance", async (req, res) => {
   const { userId } = req.body;
   const today = new Date().toISOString().split("T")[0];
@@ -129,7 +130,6 @@ app.post("/mark-attendance", async (req, res) => {
     // Get all attendance dates
     const markedDates = user.attendance.map(a => a.date);
 
-    // Use registrationDate as the earliest possible date
     // Use registrationDate as the earliest possible date
     const registrationDate = user.registrationDate || today;
 
@@ -255,6 +255,30 @@ app.get("/attendance/:userId", async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching attendance:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Add this to your Express server (server.js or routes file)
+app.post("/user/:userId/mark-payment", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { amount, date } = req.body;
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    // Add payment to user's payments array
+    user.payments.push({
+      date: date || new Date().toISOString().split("T")[0],
+      amount: Number(amount),
+      status: "Paid",
+      remaining: 0,
+      nextPaymentDate: null,
+    });
+
+    await user.save();
+    res.json({ message: "Payment marked successfully" });
+  } catch (err) {
     res.status(500).json({ error: "Server error" });
   }
 });
